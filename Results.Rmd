@@ -15,7 +15,6 @@ library(tidyverse)
 library(gdata)
 ```
 
-SAVE OUTPUT
 ```{r function clean_pop_B, echo = F}
 clean_pop_B <- function(pop, cards){
   pop[max(cards),    ,] <- "Call"
@@ -212,30 +211,25 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
 ```
 
 IMPORT OUTPUT
-```{r, default, cache = TRUE, echo = FALSE, eval = F}
+```{r, default, echo = FALSE, eval = F}
 set.seed(123)
-results_ante_05_mut_05 <- my_GA()
-```
-```{r, ante_10, cache = TRUE, echo = FALSE, eval = T}
-set.seed(123)
-results_ante_10_mut_05 <- my_GA(ante = 10)
-```
-```{r, ante_00, cache = TRUE, echo = FALSE, eval = T}
-set.seed(123)
-results_ante_00_mut_01 <- my_GA(ante = 0, mutation_rate = 0.01)
-```
-```{r, mut_01, cache = TRUE, echo = FALSE, eval = F}
-set.seed(123)
-results_ante_05_mut_01 <- my_GA(mutation_rate = 0.01)
-```
-```{r, mut_10, cache = TRUE, echo = FALSE, eval = F}
-set.seed(123)
-results_ante_05_mut_10 <- my_GA(mutation_rate = 0.1)
-```
-```{r, mut_001, cache = TRUE, echo = FALSE, eval = F}
-set.seed(123)
+results_ante_05_mut_05  <- my_GA()
+results_ante_10_mut_05  <- my_GA(ante = 10)
+results_ante_00_mut_01  <- my_GA(ante = 0, mutation_rate = 0.01)
+results_ante_05_mut_01  <- my_GA(mutation_rate = 0.01)
+results_ante_05_mut_10  <- my_GA(mutation_rate = 0.1)
 results_ante_05_mut_001 <- my_GA(mutation_rate = 0.001)
+
+save(results_ante_05_mut_05, results_ante_10_mut_05,
+     results_ante_00_mut_01, results_ante_05_mut_01,
+     results_ante_05_mut_10, results_ante_05_mut_001,
+     file = "results.RDATA")
 ```
+
+```{r import}
+load("results.RDATA")
+```
+
 
 # Introduction
 We experiment with the parameters of our GA to anwser two questions: (i) **what conditions encourage player A to bluff** and (ii) **is there any trick that player B can adopt to stop player A's bluff**. It appears that the size of the ante and the mutation rate have an impact on player A's level of bluff. Large antes make a successful bluff more profitable and are associated with larger levels of bluff for player A. Low mutation rates make the environment more stable and are also associated with larger levels of bluff. After discussing these results, I mention elements to incorprate in the analysis in the future.
