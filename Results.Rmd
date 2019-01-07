@@ -1,0 +1,357 @@
+---
+title: "Results"
+author: "Raphaël Morsomme"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: TRUE
+    fig_height: 12
+    fig_width: 10
+runtime: shiny
+---
+
+\newpage
+\tableofcontents
+\newpage
+
+```{r libraries, message=F}
+library(tidyverse)
+library(gdata)
+```
+
+SAVE OUTPUT
+```{r function clean_pop_B, echo = F}
+clean_pop_B <- function(pop, cards){
+  pop[max(cards),    ,] <- "Call"
+  pop[          , "0",] <- "Call"
+  return(pop)
+}
+```
+```{r function confront, echo = F}
+confront <- function(strategy_A, strategy_B, n_card, dim_mat, bets, ante, win_game){
+  
+  # Matrix-oriented approach
+  bet_A    <- array(rep(strategy_A, each = n_card       ) , dim = dim_mat)
+  action_B <- array(strategy_B[ , match(strategy_A, bets)], dim = dim_mat)
+  gain_A                   <- (ante + bet_A) * win_game
+  gain_A[action_B=="Fold"] <-  ante
+  
+  # Average gain for player A
+  return(mean(gain_A))
+  
+}
+```
+```{r function confront_all, echo = F}
+confront_populations <- function(pop_A, pop_B, name_strategy, fitness, n_card,
+                                 dim_mat, bets, ante, win_game){
+  for(strat_a in name_strategy){ 
+    for(strat_b in name_strategy){
+      fitness[strat_b, strat_a] <- confront(strategy_A = pop_A[ , strat_a  ],
+                                            strategy_B = pop_B[ , , strat_b],
+                                            n_card = n_card, dim_mat = dim_mat,
+                                            bets = bets, ante = ante, win_game = win_game)
+    } # end-for
+  } # end-for
+  return(fitness)
+}
+```
+```{r function generate_A, echo = F}
+generate_A <- function(fitness, pop, n_parents, dim_pop_A, dimname_pop_A,
+                       n_strategy, bets, mutation_rate){
+  
+  # Parent Selection
+  fitness_strategy <- colMeans(fitness)
+  fitness_parents  <- head(sort(fitness_strategy, decreasing  = T), n_parents)
+  name_parents     <- names(fitness_parents)
+  parents          <- pop[ , name_parents]
+  
+  # Crossover
+  pop <- array(sample(name_parents, size = prod(dim_pop_A), replace = T,
+                      prob = exp(fitness_parents)),
+               dim = dim_pop_A, dimnames = dimname_pop_A)
+  
+  for(parent in name_parents){
+    
+    strategy_parent <- parents[ , parent]
+    location_parent <- pop == parent
+    pop[location_parent] <- rep(strategy_parent, n_strategy)[location_parent]
+
+  }
+  
+  pop <- array(as.numeric(pop), dim = dim_pop_A, dimnames = dimname_pop_A)
+  
+  # Mutation
+  mutation_location <- array(sample(c(T, F), size = prod(dim_pop_A), T,
+                                    prob = c(mutation_rate, 1-mutation_rate)),
+                             dim = dim_pop_A, dimnames = dimname_pop_A)
+  
+  n_mutations      <- sum(mutation_location)
+  mutation_outcome <- sample(bets, size = n_mutations, replace = T)
+  
+  pop[mutation_location] <- mutation_outcome
+  
+  return(pop)
+  
+}
+```
+```{r function generate_B, echo = F}
+generate_B <- function(fitness, pop, n_parents, dim_pop_B, dimname_pop_B,
+                       n_strategy, mutation_rate, cards){
+  
+  # Parent Selection
+  fitness          <- - fitness
+  fitness_strategy <- rowMeans(fitness)
+  fitness_parents  <- head(sort(fitness_strategy, decreasing  = T), n_parents)
+  name_parents     <- names(fitness_parents)
+  parents          <- pop[ , , name_parents]
+  
+  # Crossover
+  pop <- array(sample(name_parents, size = prod(dim_pop_B), replace = T,
+                      prob = exp(fitness_parents)),
+               dim = dim_pop_B, dimnames = dimname_pop_B)
+    
+  for(parent in name_parents){
+    
+    strategy_parent <- parents[ , , parent]
+    location_parent <- pop == parent
+    
+    pop[location_parent] <- rep(strategy_parent, n_strategy)[location_parent]
+    
+  }
+  
+  # Mutation
+  mutation_rate <- 2 * mutation_rate
+  # since player B has only two actions i.e. "Call" or "Fold"
+  # half of the mutations have no effect.
+  mutation_location <- array(sample(c(T, F), size = prod(dim_pop_B), replace = T,
+                                    prob = c(mutation_rate, 1-mutation_rate)),
+                           dim = dim_pop_B, dimnames = dimname_pop_B)
+  
+  n_mutations            <- sum(mutation_location)
+  mutation_outcome       <- sample(c("Call", "Fold"), n_mutations, T)
+  pop[mutation_location] <- mutation_outcome
+  
+  pop <- clean_pop_B(pop = pop, cards = cards)
+  
+  return(pop)
+  
+}
+```
+```{r function my_GA, echo = F}
+my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
+                  n_generations = 10, prop_parents = 2/3, mutation_rate = 0.05){
+  
+  # Setup
+  n_card        <- length(cards)
+  n_bet         <- length(bets)
+  n_parents     <- n_strategy * prop_parents
+  
+  name_strategy <- paste("s", 1 : n_strategy, sep = "")
+  
+  dim_pop_A     <- c(n_card, n_strategy)
+  dim_pop_B     <- c(n_card, n_bet, n_strategy)
+  dim_mat       <- c(n_card, n_card)
+  dim_fit       <- c(n_strategy, n_strategy)
+  dim_output_A  <- c(n_card, n_strategy, n_generations)
+  dim_output_B  <- c(n_card, n_bet, n_strategy, n_generations)
+  
+  dimname_pop_A    <- list(cards, name_strategy)
+  dimname_pop_B    <- list(cards, bets, name_strategy)
+  dimname_mat      <- list(cards, cards)
+  dimname_fit      <- list(name_strategy, name_strategy)
+  dimname_output_A <- list(cards, name_strategy, 1:n_generations)
+  dimname_output_B <- list(cards, bets, name_strategy, 1:n_generations)
+  
+  win_game      <- array(numeric(n_card * n_card), dim = dim_mat)
+  upperTriangle(win_game, diag = F) <-  1
+  lowerTriangle(win_game, diag = F) <- -1
+  
+  fitness <- array(NA, dim = dim_fit, dimnames = dimname_fit)
+  
+  output_A <- array(NA, dim = dim_output_A, dimnames = dimname_output_A)
+  output_B <- array(NA, dim = dim_output_B, dimnames = dimname_output_B)
+
+  # Initialization
+  generation <- 1
+  
+  pop_A <- array(sample(bets, size = prod(dim_pop_A), replace = T),
+                 dim = dim_pop_A, dimnames = dimname_pop_A)
+  pop_B <- array(sample(c("Call", "Fold"), size = prod(dim_pop_B), replace = T),
+                 dim = dim_pop_B, dimnames = dimname_pop_B)
+  pop_B <- clean_pop_B(pop_B, cards = cards)
+  
+  output_A[ , , generation  ] <- pop_A
+  output_B[ , , , generation] <- pop_B
+  
+  
+  # Loop
+  while(generation < n_generations){
+
+    fitness <- confront_populations(pop_A = pop_A, pop_B = pop_B,
+                                    name_strategy = name_strategy,
+                                    fitness = fitness, n_card = n_card,
+                                    dim_mat = dim_mat, bets = bets, 
+                                    ante = ante, win_game = win_game)
+
+    pop_A <- generate_A(fitness = fitness, pop = pop_A, n_parents = n_parents,
+                        dim_pop_A = dim_pop_A, dimname_pop_A = dimname_pop_A,
+                        n_strategy = n_strategy, bets = bets,
+                        mutation_rate = mutation_rate)
+    
+    pop_B <- generate_B(fitness = fitness, pop = pop_B, n_parents = n_parents,
+                        dim_pop_B = dim_pop_B, dimname_pop_B = dimname_pop_B,
+                        n_strategy = n_strategy, cards = cards,
+                        mutation_rate = mutation_rate)
+    
+    generation <- generation + 1
+    
+    output_A[ , , generation  ] <- pop_A
+    output_B[ , , , generation] <- pop_B
+    
+  } # close for-loop
+  
+  return(list(A = output_A, B = output_B))
+  
+}
+```
+
+IMPORT OUTPUT
+```{r, default, cache = TRUE, echo = FALSE, eval = F}
+set.seed(123)
+results_ante_05_mut_05 <- my_GA()
+```
+```{r, ante_10, cache = TRUE, echo = FALSE, eval = T}
+set.seed(123)
+results_ante_10_mut_05 <- my_GA(ante = 10)
+```
+```{r, ante_00, cache = TRUE, echo = FALSE, eval = T}
+set.seed(123)
+results_ante_00_mut_01 <- my_GA(ante = 0, mutation_rate = 0.01)
+```
+```{r, mut_01, cache = TRUE, echo = FALSE, eval = F}
+set.seed(123)
+results_ante_05_mut_01 <- my_GA(mutation_rate = 0.01)
+```
+```{r, mut_10, cache = TRUE, echo = FALSE, eval = F}
+set.seed(123)
+results_ante_05_mut_10 <- my_GA(mutation_rate = 0.1)
+```
+```{r, mut_001, cache = TRUE, echo = FALSE, eval = F}
+set.seed(123)
+results_ante_05_mut_001 <- my_GA(mutation_rate = 0.001)
+```
+
+# Introduction
+We experiment with the parameters of our GA to anwser two questions: (i) **what conditions encourage player A to bluff** and (ii) **is there any trick that player B can adopt to stop player A's bluff**. It appears that the size of the ante and the mutation rate have an impact on player A's level of bluff. Large antes make a successful bluff more profitable and are associated with larger levels of bluff for player A. Low mutation rates make the environment more stable and are also associated with larger levels of bluff. After discussing these results, I mention elements to incorprate in the analysis in the future.
+
+## Defining Bluff
+Since our version of poker only allows player A to bluff, we exclusively focus on player A's strategy and how often (s)he bluffs.
+We use a simple definition of bluff: *player A bluffs if (s)he bets large amounts for small cards*. In this script, we assess whether player A bluffs *visually*[^4]. The following two plots display two strategies for player A, one with, and one without bluff. They should guide us in our interpretation of the results.
+
+```{r, fig.height = 5, echo = F}
+par(mfrow=c(1,2), cex = 1.1)
+
+barplot(c(12, 7, 8, 2, 3, 3, 12, 15, 18, 17),
+        names.arg = 1:10,
+        ylim = c(0, 20),
+        main = "Strategy for Player A with Bluff",
+        xlab = "Player A's Card", ylab = "Bet")
+abline(h=seq(0,20,2), lty=2)
+
+barplot(c(2, 1, 2, 2, 3, 3, 12, 15, 18, 17),
+        names.arg = 1:10,
+        ylim = c(0, 20),
+        main = "Strategy for Player A without Bluff",
+        xlab = "Player A's Card", ylab = "Bet")
+abline(h=seq(0,20,2), lty=2)
+
+par(mfrow=c(1,1), cex = 1)
+```
+
+# Results
+Two factors influence player A's level of bluf: the size of the ante and the mutation rate.
+
+```{r, echo = FALSE}
+radioButtons("dataset", "Parameters",
+             choiceNames  = list("ante = 0", "ante = 10"),
+             choiceValues = list("results_ante_00_mut_01", "results_ante_10_mut_05")
+             )
+
+sliderInput("generation", "Generation", value = 1, min = 1, max = 10, step = 1)
+
+renderPlot({
+  
+  par(mfrow = c(1, 2), cex = 1.1)
+  dataset <- get(input$dataset)
+  
+  barplot(rowMeans(dataset$A[ , , input$generation]), 
+          ylim = c(0, 20),
+          main = "Average Strategy for Player A",
+          xlab = "Player A's Card",
+          ylab = "Average Bet")
+  abline(h=seq(0,20,2), lty=2)
+  
+  image(1:10, seq(0,20,2),
+        rowMeans(dataset$B[ , , , input$generation] == "Call", dims = 2),
+        col = gray((100 : 0) / 100),
+        main = "Average Strategy for Player B",
+        xlab = "Player B's Card", ylab = "Average Action")
+  })
+
+renderText({
+  
+  dataset <- get(input$dataset)
+  
+  print(paste("Player A bets on average", mean(dataset$A[ , , input$generation] ), "per hand."))
+  
+  })
+
+renderText({
+  
+  dataset <- get(input$dataset)
+  
+  print(paste("Player B calls ", round(100 * mean(dataset$B[ , , , input$generation]  == "Call"), 1), "% of the time.", sep = ""))
+  
+  })
+```
+
+## Ante
+The size of the ante determines how profitable it is for player A to bluff. Indeed, player A wins the ante if player B does not call the bet. A large ante encourages player A to bluff more often and a small ante has the opposite effect. In the extreme case, when `ante = 0`, player A should never bluff as (s)he can only lose by doing so: even if player B does not call the bet, (s)he wins nothing (ante is `0`).
+
+This is exactly what we find. We can see that when the ante is `0`, player A adopts an extremely conservative strategy: only bets significant amount when (s)het receives a `10` and bets `0` otherwise (see generation `40` and after)[^2]. On the contrary, when we increase the ante to `10`, player A bluffs much more often (e.g. generation `120`). The latter situation is more favorable to player A who wins on average `3` units per hand played (versus `0` when the ante is `0`).
+
+This shows that, unsurprisingly, the more profitable the bluff, the more player A bluffs. This has the following consequence for situations involving negotiation: one should bluff (and expect other people to bluff) if, and only if, it is worth it. This means that a way to prevent someone else form bluffing is to convince her/him that bluffing is not worth it, that the gain of a bluff are too small for the bluff to be profitable. As for poker, this means that a way to encourage players to bluff -- and thereby make the games more exciting -- is simply to increase the value of the ante.
+
+## Mutation Rate
+By determining how different the child strategies are from their parent strategies, the mutations rate determines how stable the environment is. A small mutation rate results in child strategies that are very similar to their parents, hence a stable environment where children share the features of their parents. A large mutation rate makes the environment more unstable since the generated child strategies have a large number of *random* mutations.
+
+The link between stability and bluff is not obvious at first glance (at least it was not to me). Yet, we observe that player A's level of bluff increases when the mutation rate is low (e.g. generation `60` for `mutation_rate = 0.01`) and decreases when the rate is high (e.g. all generations for `mutation_rate = 0.1`)[^3]. This indicates that a stable environment encourages bluff while a unstable one discourages it. Indeed, bluff has no chance to succeed in an environment where the opponent plays randomly (due to random mutations) and thereby calls many bluffs. Bluff can only succeed when the opponent plays in a relatively predictive way (in our case, by closely following the strategies of their parents). When the mutation rate is low (`0.01`), we observe that player B adopt a cautious approach, folding most of the time -- especially when player A bets a large amount -- meaning that player A's bluffs are rarely called and making bluffs attractive. On the contrary, when the mutation rate is high (`0.1`), player B plays more erratically due to the many random mutations occuring in her/his strategies, calling, as a result, player A's bluffs more often. In such situation, bluffing is less profitable to player A. yet, one should note that by playing more erratically, player B also decreases its average gain per hand.
+
+This implies, that in very stable situations where people behave in a predictable way, bluffing is most profitable. Interestingly, this also means that player B can protect her/himself from player A's bluffs by playing more randomly in order to call player A's bluffs more often, making her/him more reluctant to bluff in the future. If we translate this to real life, if we want to stop someone else's bluff, we should behave in a less predictable way and call the other person's bluff more often. Yet, such behavior may result in smaller gains in the long terms.
+
+## Other Parameters
+I also explored the effect of the other parameters of the GA on player A's level of bluff and found that they do not influence it. Increasing the number of cards or bets only slows down the algorith and makes the patterns need a larger number of generations to appear. The number of strategies in the population also has no impact on player A's level of bluff. Yet, one needs a sufficient amount of strategies in the populations for the algorithm to work. If there are not enough strategies in the population (`20` for instance), then the strategies struggle to evolve after a few generations. Finally, the proportion of strategies that we select to form the set of parent strategies has to be, to my surprise, relatively large. A small value also results in population that struggle to evolve.
+
+# Looking Forward
+There are several elements which we could include in the analysis to improve it.
+
+## Efficiency
+We should evaluate which parameters of the GA have the most influence on it speed. This is relatively straightforward to do and I will look into it after the Christmas break.
+
+## Defining numeric measures of Player A's level of bluff and the environment's stability
+So far, we have conducted a visual assessment of player A's level of bluff. Yet, it would be beneficial to have a numerical measure for it as it would allow us to conduct statistical test on the results. We could for instance measure the distance between player A's strategies and a strategies where there is no bluff.
+
+Similarly, we could also come up with a measure of how stable the environment is from player A's perspective. We could for instance quantify the homogeneity of player B's strategies. Population of similar strategies (resulting in black/white square on the plots instead of grey squares) would be associated with a more stable environment (see last series of plots where `mutation_rate = 0.001` for extremely stable environment).
+
+## Elitism
+Note that our version of the GA does not include *elitism*. Elitism refers to the practice of keeping the best parent strategies (the elites) for the following generation. If we set the proportion of elites to, say, `10%`, then the `10%` fittest strategies are kept and the children strategies replace the remaining strategies. Elitism ensures that, regardless of the mutations occuring in the children strategies, we still have good strategies (the elites) in the new population. Elitism makes the GA more efficient.
+
+## Stochastic Strategies
+Finally, we could introduce a *stochastic* element in the strategies of the players. For player A, this could take the form of a strategy that gives a density distribution for each card (s)he could receive. Player A's bet then corresponds to a value randomly chosen according to the density distribution. Such strategy could for instance consists of matrix with two columns which provide a mean and a standard deviation for a normal distribution for each possible card. The current version of player A's strategy is a special case of such stochastic strategy where the standard deviations are `0`. As for player B, the strategy could indicate the probability of calling player A's bet given her/his card and player A's bet. The current version of player B's strategy is a special case of such stochastic strategy where the two allowed probabilities are `0` (fold) and `1` (call). Designing strategies containing a stochastic element will be the topic of my next script.
+
+
+[^2]: I set the mutation rate to `0.01` to accentuate this pattern.
+
+[^3]: Note that if the mutation rate is too small (e.g. `0.001`, last series of plots), then the strategies merely respond to one another in a cyclical way. See the lack of continuity across generations between generations `405` and `425` and how homogenous player B's strategies are (indicated by entirely white or black squares on the upper right graphs)
+
+[^4]: I discuss alternative methods in the last section.
