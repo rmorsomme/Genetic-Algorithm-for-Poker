@@ -10,10 +10,6 @@ output:
 runtime: shiny
 ---
 
-\newpage
-\tableofcontents
-\newpage
-
 ```{r libraries, message=F}
 library(tidyverse)
 library(gdata)
