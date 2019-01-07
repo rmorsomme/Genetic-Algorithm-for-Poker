@@ -1,0 +1,60 @@
+---
+title: "Appendix - Naive Approach"
+author: "Raphaël Morsomme"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+Following the five steps for playing a hand of poker, the naive approach would use a code similar to the following:
+
+```{r naive approach}
+
+#
+# Setup
+ante   <- 2
+cards  <- 1 : 10
+bets   <- seq(0, 20, 2)
+n_card <- length(cards)
+n_bet  <- length(bets )
+
+strategy_A <- array(sample(x = bets, size = n_card, replace = T), 
+                    dim = c(n_card, 1), dimnames = list(cards, "Strategy A"))
+strategy_B <- array(sample(x = c("Call", "Fold"), n_card * n_bet, T),
+                    dim=c(n_card, n_bet, 1), dimnames = list(cards, bets, "Strategy B"))
+
+# Strategies of the two players
+print(strategy_A)
+print(strategy_B)
+
+
+#
+# Five Steps
+
+# 1. Player A's Bet
+card_A   <- sample(cards, 1)
+bet_A    <- strategy_A[card_A]
+
+# 2. Player B's Action
+card_B   <- sample(cards, 1)
+action_B <- strategy_B[card_B, match(x = bet_A, table = bets), 1]
+
+# 3. Pot Size
+if (action_B == "Fold") pot <- 2 *  ante
+if (action_B == "Call") pot <- 2 * (ante + bet_A)
+
+# 4. Winner
+if(action_B == "Fold") result <- "A wins"
+if(action_B == "Call"){if(card_A >  card_B) result <- "A wins"
+                       if(card_A <  card_B) result <- "B wins"
+                       if(card_A == card_B) result <- "draw"}
+
+# 5. Gain/loss
+if(result == "draw"  ) gain <- 0
+if(result == "A wins") gain <- pot/2
+if(result == "B wins") gain <- pot/2
+  
+# Summary
+print(paste("Player A receives a", card_A, "and bets", bet_A,
+            ". Player B receives a", card_B, "and decides to", action_B))
+print(paste("The pot is", pot, "and the result of the hand is:", result))
+```
