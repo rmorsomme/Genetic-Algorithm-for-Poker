@@ -468,7 +468,7 @@ Now that we have covered all the components of the GA, we can finally write the 
 
 ```{r function my_GA}
 my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
-                  n_generations = 200, prop_parents = 2/3, mutation_rate = 0.05){
+                  n_generations = 5, prop_parents = 2/3, mutation_rate = 0.05){
   
   # Setup
   n_card        <- length(cards)
@@ -481,15 +481,17 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
   dim_pop_B     <- c(n_card, n_bet, n_strategy)
   dim_mat       <- c(n_card, n_card)
   dim_fit       <- c(n_strategy, n_strategy)
-  dim_output_A  <- c(n_card, n_strategy, n_generations)
-  dim_output_B  <- c(n_card, n_bet, n_strategy, n_generations)
+  dim_output_A  <- c(dim_pop_A, n_generations)
+  dim_output_B  <- c(dim_pop_B, n_generations)
+  dim_fit_A     <- c(dim_fit, n_generations)
   
   dimname_pop_A    <- list(cards, name_strategy)
   dimname_pop_B    <- list(cards, bets, name_strategy)
   dimname_mat      <- list(cards, cards)
   dimname_fit      <- list(name_strategy, name_strategy)
-  dimname_output_A <- list(cards, name_strategy, 1:n_generations)
-  dimname_output_B <- list(cards, bets, name_strategy, 1:n_generations)
+  dimname_output_A <- list(cards, name_strategy, 1 : n_generations)
+  dimname_output_B <- list(cards, bets, name_strategy, 1 : n_generations)
+  dimname_fit_A    <- list(name_strategy, name_strategy, 1 : n_generations)
   
   win_game      <- array(numeric(n_card * n_card), dim = dim_mat)
   upperTriangle(win_game, diag = F) <-  1
@@ -497,8 +499,9 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
   
   fitness <- array(NA, dim = dim_fit, dimnames = dimname_fit)
   
-  output_A <- array(NA, dim = dim_output_A, dimnames = dimname_output_A)
-  output_B <- array(NA, dim = dim_output_B, dimnames = dimname_output_B)
+  output_A  <- array(NA, dim = dim_output_A, dimnames = dimname_output_A)
+  output_B  <- array(NA, dim = dim_output_B, dimnames = dimname_output_B)
+  fitness_A <- array(NA, dim = dim_fit_A   , dimnames = dimname_fit_A   )
 
   # Initialization
   generation <- 1
@@ -532,14 +535,17 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
                         n_strategy = n_strategy, cards = cards,
                         mutation_rate = mutation_rate)
     
-    generation <- generation + 1
+    # Output
+    fitness_A[ , , generation ] <- fitness
     
+    generation <- generation + 1
     output_A[ , , generation  ] <- pop_A
     output_B[ , , , generation] <- pop_B
     
   } # close for-loop
   
-  return(list(A = output_A, B = output_B))
+  return(list(A = output_A, B = output_B,
+              fit = fitness_A))
   
 }
 ```
@@ -552,10 +558,10 @@ results <- my_GA(n_generations = 2)
 results_A <- results$A
 results_B <- results$B
 
-# 10 strategies for player A during the 2nd generation
+# 10 strategies of the 2nd generation for player A
 results_A[ , 1 : 10, 2]
 
-# 2 strategies for player B during the 2nd generation
+# 2 strategies of the 2nd generation for player B
 results_B[ , , 25 : 26, 2]
 ```
 
@@ -564,7 +570,7 @@ save(clean_pop_B,
      confront, confront_populations,
      generate_A, generate_B,
      my_GA,
-     file = "functionS.RDATA")
+     file = "functions.RDATA")
 ```
 
 
