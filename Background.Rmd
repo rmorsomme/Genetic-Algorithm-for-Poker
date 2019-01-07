@@ -232,8 +232,8 @@ strat_B <- pop_B[ , , 1]
 print(strat_B)
 
 average_gain_A <- confront(strategy_A = strat_A, strategy_B = strat_B,
-                            n_card = n_card, dim_mat = dim_mat, bets = bets,
-                            ante = ante, win_game = win_game)
+                           n_card = n_card, dim_mat = dim_mat, bets = bets,
+                           ante = ante, win_game = win_game)
 # Average gain of player A
 print(average_gain_A)
 ```
@@ -557,6 +557,14 @@ results_A[ , 1 : 10, 2]
 
 # 2 strategies for player B during the 2nd generation
 results_B[ , , 25 : 26, 2]
+```
+
+```{r, echo = FALSE}
+save(clean_pop_B,
+     confront, confront_populations,
+     generate_A, generate_B,
+     my_GA,
+     file = "functionS.RDATA")
 ```
 
 
