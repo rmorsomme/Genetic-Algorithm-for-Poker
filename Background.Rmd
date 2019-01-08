@@ -468,7 +468,7 @@ Now that we have covered all the components of the GA, we can finally write the 
 
 ```{r function my_GA}
 my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
-                  n_generations = 5, prop_parents = 2/3, mutation_rate = 0.05){
+                  n_generations = 100, prop_parents = 2/3, mutation_rate = 0.05){
   
   # Setup
   n_card        <- length(cards)
