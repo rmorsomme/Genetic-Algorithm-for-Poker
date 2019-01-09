@@ -3,7 +3,8 @@ title: "Learning Strategies for Poker with a Genetic Algorithm"
 author: "Raphaël Morsomme"
 date: "`r Sys.Date()`"
 output:
-  github_document
+  github_document:
+    toc: TRUE
 ---
 
 ```{r libraries, message=F}

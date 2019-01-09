@@ -3,6 +3,27 @@ Learning Strategies for Poker with a Genetic Algorithm
 Raphaël Morsomme
 2019-01-09
 
+-   [Introduction](#introduction)
+-   [Background](#background)
+    -   [A Simple Version of Poker](#a-simple-version-of-poker)
+    -   [Strategies](#strategies)
+    -   [Simulating a Hand](#simulating-a-hand)
+        -   [Setup](#setup)
+        -   [The Naive Approach](#the-naive-approach)
+        -   [The Matrix-Oriented Approach](#the-matrix-oriented-approach)
+-   [The Genetic Algorithm](#the-genetic-algorithm)
+    -   [Overview](#overview)
+    -   [Population of Strategies](#population-of-strategies)
+        -   [Cleaning Player B's Strategies](#cleaning-player-bs-strategies)
+    -   [Fitness of a Strategy](#fitness-of-a-strategy)
+        -   [Confrontations: one v. one](#confrontations-one-v.-one)
+        -   [Confrontations: all v. all](#confrontations-all-v.-all)
+    -   [Generating New Strategies](#generating-new-strategies)
+        -   [Parent Selection](#parent-selection)
+        -   [Children Generation](#children-generation)
+        -   [Code](#code)
+-   [The Genetic Algorithm in Action](#the-genetic-algorithm-in-action)
+
 ``` r
 library(tidyverse)
 library(gdata)
