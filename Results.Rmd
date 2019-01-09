@@ -10,23 +10,22 @@ output:
 runtime: shiny
 ---
 
-```{r libraries, message=F}
+```{r, default, echo = FALSE, eval = FALSE}
+
 library(tidyverse)
 library(gdata)
-```
 
-```{r import, echo = FALSE}
+# Setup
 load("functions.RDATA")
-```
-
-```{r, default, echo = FALSE, eval = FALSE}
+n_generation <- 125
 set.seed(123)
-results_ante_05_mut_05  <- my_GA()
-results_ante_10_mut_05  <- my_GA(ante = 10)
-results_ante_00_mut_01  <- my_GA(ante = 0, mutation_rate = 0.01)
-results_ante_05_mut_01  <- my_GA(mutation_rate = 0.01)
-results_ante_05_mut_10  <- my_GA(mutation_rate = 0.1)
-results_ante_05_mut_001 <- my_GA(mutation_rate = 0.001)
+
+results_ante_05_mut_05  <- my_GA(n_generation = n_generation)
+results_ante_10_mut_05  <- my_GA(ante = 10, n_generation = n_generation)
+results_ante_00_mut_01  <- my_GA(ante = 0, mutation_rate = 0.01, n_generation = n_generation)
+results_ante_05_mut_01  <- my_GA(mutation_rate = 0.01, n_generation = n_generation)
+results_ante_05_mut_10  <- my_GA(mutation_rate = 0.1, n_generation = n_generation)
+results_ante_05_mut_001 <- my_GA(mutation_rate = 0.001, n_generations = n_generation)
 
 save(results_ante_05_mut_05, results_ante_10_mut_05,
      results_ante_00_mut_01, results_ante_05_mut_01,
@@ -78,7 +77,7 @@ radioButtons("dataset", "Parameters",
                                  "results_ante_05_mut_001", "results_ante_05_mut_01", "results_ante_05_mut_10")
              )
 
-sliderInput("generation", "Generation", value = 1, min = 1, max = 10, step = 1)
+sliderInput("generation", "Generation", value = 1, min = 1, max = 500, step = 1)
 
 renderPlot({
   
@@ -106,6 +105,7 @@ renderText({
   print(paste("Player A bets on average", round(mean(dataset$A[ , , input$generation] ), 2), "per hand."))
   
   })
+
 renderText({
   
   dataset <- get(input$dataset)
@@ -120,7 +120,6 @@ renderText({
   print(paste("Player B calls ", round(100 * mean(dataset$B[ , , , input$generation]  == "Call"), 1), "% of the time.", sep = ""))
   
   })
-
 
 renderPlot({
   

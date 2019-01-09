@@ -19,14 +19,14 @@ library(gdata)
 ```
 
 # Introduction
-In this script, I use a traditional genetic algorithm (GA) to learn profitable strategies for a fairly simple version of poker. I chose to investigate poker because I love playing this game, and to use a GA because it offers a nice coding challenge and is a suitable method for learning good strategies for this game. A question that I want to answer at the end of the script is if the GA will learn strategies prescribing to bluff.
+In this script, I use a traditional genetic algorithm (GA) to learn strategies for a fairly simple version of poker. I investigate poker because I love playing this game, and to use a GA because it offers a nice coding challenge and is a suitable method for learning good strategies for this game. A question that I want to answer at the end of the script is if the GA will learn strategies containing an element of bluff.
 
 # Background
 
 ## A Simple Version of Poker
-We consider a fairly simple version of poker opposing two opponents whom we call *player A* and *player B* for convenience. A hand starts with each player paying an *ante* (small fixed amount) and receiving a single card. Player A then effectuates a *bet* and player B decides to either *fold* or *call* it. If player B folds, then player A wins the hand and recuperates the pot (the two antes). If player B calls player A's bet, then the player with the highest card wins the hand and recuperates the pots (the two antes and the two bets)[^6]. If player B calls player A's bet and both players have the same card, they share the pot.
+We consider a fairly simple version of poker opposing two players: player A and player B. A hand starts with each player paying an *ante* (small predetermined amount) and receiving a single card. Player A then effectuates a *bet* and player B decides to either *fold* or *call* it. If player B folds, then player A wins the hand and recuperates the pot (the two antes). If player B calls player A's bet, then the players show their cards and the one with the highest card wins the hand and recuperates the pots (the two antes and the two bets)[^6]. If player B calls player A's bet and both players have the same card, they share the pot.
 
-In short, a hand follows **5 steps** where we determine:
+In short, a hand follows **5 steps** in which we determine:
 
 1. **Player A's bet** based on player A's strategy and player A's card.
 2. **Player B's action** based on player B's strategy, player B's card and player A's bet.
@@ -37,21 +37,21 @@ In short, a hand follows **5 steps** where we determine:
 Before delving into the GA itself, we examine the nature of the strategies, and how to simulate a hand.
 
 ## Strategies
-Player A's strategy indicates the amount to bet given the card (s)he receives. It consists of a vector of numeric values indicating the amount to bet for each card (s)he could receive. If we consider a game where player A can bet the following amounts `r seq(0,10,2)` and the cards are `r 1:4`, the following is a possible strategy for player A
+Player A's strategy consists of a vector of numeric values indicating the amount to bet for each card (s)he could receive. If we consider a game where player A can effectuate the following bets `r seq(0,10,2)` and the cards are `r 1:4`, the following is a possible strategy for player A
 ```{r strategy A example, echo=F}
 strategy_A <- array(c(0, 10, 2, 8), dim = c(4,1), dimnames = list(1:4, "Strategy A"))
 # Strategy for player A
 print(strategy_A)
 ```
-that prescribes to bet `0` if (s)he receives a card `1`, `10` (a bluff!) if (s)he receives a `2`, `2` if (s)he receives a `3`, and to bet `8` if (s)he receives a `4`.
+which prescribes to bet `0` if (s)he receives a card `1`, `10` (a bluff!) if (s)he receives a `2`, `2` if (s)he receives a `3`, and to bet `8` if (s)he receives a `4`.
 
-Player B's strategy indicates the action to realise i.e. whether to *fold* or to *call* given two elements: player A's bet and player B's card[^1]. It consists of a matrix whose entries indicate the action to realise for each possible combination of her/his card and player A's bet. The following is a possible strategy for player B
+Player B's strategy consists of a matrix whose entries indicate the action to realise -- to *fold* or to *call* -- for each possible combination of her/his card and player A's bet. The following is a possible strategy for player B
 ```{r strategy B example, echo=F}
 strategy_B <- array(c("Fold", "Fold", "Call", "Fold", "Call", "Fold", "Fold", "Fold", "Call", "Fold", "Call","Call", "Fold","Call", "Fold", "Call","Call", "Fold", "Fold", "Fold", "Call", "Fold", "Fold", "Call"), dim=c(6,4, 1), dimnames=list(seq(0, 10, 2), 1:4, "Strategy B"))
 # Strategy for Player B
 print(strategy_B)
 ```
-that prescribes to `fold` if (s)he receives a card `1` and player A bets `0`, to `call` if (s)he receives a `2` and player A bets `4` and to `call` if (s)he receives a `4` and player A bets `10`. Now that we can generate a strategy for each player, let us simulate a hand.
+which prescribes to `fold` if (s)he receives a card `1` and player A bets `0`, to `call` if (s)he receives a `2` and player A bets `4` and to `call` if (s)he receives a `4` and player A bets `10`. Now that we can generate a strategy for each player, let us simulate a hand.
 
 ## Simulating a Hand
 
@@ -62,8 +62,11 @@ cards  <- 1:4
 bets   <- seq(from = 0, to = 10, by = 2)
 ante   <- 2
 
-n_card <- length(cards) # for convenience
-n_bet  <- length(bets)  # for convenience
+# for convenience
+n_card      <- length(cards)
+n_bet       <- length(bets)
+dim_mat     <- c(n_card, n_card)  # (see matrix-oriented approach)
+dimname_mat <- list(cards, cards) # (see matrix-oriented approach)
 ```
 
 We use `sample()` in `array()` to create random strategies for the two players and assign them to `strategy_A` and `strategy_B`.
@@ -80,18 +83,15 @@ print(strategy_B)
 ```
 
 ### The Naive Approach
-To simulate a hand, one could be tempted to imitate what would happen if two players sat down around a table to play a hand[^12]. Although such code would be very intuitive, it is painfully slow for simulating a large number of hands -- whihc is exactly what the GA requires -- as one needs to use loops (slow on `R`) to accomplish this. We therefore need a more efficient approach.
+To simulate a hand, one could be tempted to imitate what would happen if two players sat down around a table to play a hand. Such code would be painfully slow for simulating a large number of hands -- which is exactly what the GA requires -- as one would need to use loops (slow on `R`) to accomplish this. We therefore need a more efficient approach.
 
 ### The Matrix-Oriented Approach
-The *matrix-oriented* approach uses matrices and matrix operations (fast on `R`) to simulate a large number of hands at once. We generate 5 matrices (one per step) whose columns and rows respectively correspond to player A's and player B's cards. This way, we can simulate all possible hands at once. This is more efficient than the naive approach and is thus prefered for the GA. The matrices' entries respectively represent (i) player A's bet (ii) player B's action (iii) the pot size (iv) the winner of the hand and (v) player A's gain/loss.
+The *matrix-oriented* approach uses matrices and matrix operations (fast on `R`) to simulate a large number of hands at once. We generate 5 matrices (one for each step of the hand) whose columns and rows respectively correspond to player A's and player B's cards. This way, we can simulate all possible hands between two given strategies at once. This makes the matrix-oriented approach much more efficient than the naive one. The matrices' entries respectively represent (i) player A's bet (ii) player B's action (iii) the pot size (iv) the winner of the hand and (v) player A's gain/loss.
 
 1. **Determining player A's bet**
 
-The matrix `bet_A` represents player A's bet for each possible hand. Since player A's bet only depends on her/his card, each column contains the same values.
+The matrix `bet_A` represents player A's bet for each possible hand. Since player A's bet only depends on her/his card, each column of `bet_A` contains the same values.
 ```{r step 1}
-dim_mat     <- c(n_card, n_card)  # for convenience
-dimname_mat <- list(cards, cards) # for convenience 
-
 bet_A <- array(rep(strategy_A, each = n_card), dim = dim_mat, dimnames = dimname_mat)
 # Player A's bet
 print(bet_A)
@@ -120,7 +120,7 @@ print(pot_size)
 
 4. **Determining the winner of hand** 
 
-`win_game` indicates the winner of the hand (`1`: player A wins, `0`: a draw and `-1`: player B wins). If player B folds, then player A wins the hand.
+`win_game` indicates the winner of the hand (`1`: player A wins, `0`: a draw and `-1`: player B wins).
 ```{r step 4, message=F}
 win_game <- array(numeric(n_card * n_card), dim = dim_mat, dimnames = dimname_mat)
 
@@ -137,7 +137,6 @@ print(win_game)
 `gain_A` represents the amount won by player A. A negative amount indicates that player A loses money. Since this is a zero-sum game between two players, player B's gain/loss is simply the opposite of player A's.
 ```{r step 5}
 gain_A <- pot_size * win_game / 2
-
 # Player A's gain/loss
 print(gain_A)
 # Player B's gain/loss
@@ -468,7 +467,7 @@ Now that we have covered all the components of the GA, we can finally write the 
 
 ```{r function my_GA}
 my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
-                  n_generations = 100, prop_parents = 2/3, mutation_rate = 0.05){
+                  n_generations = 10, prop_parents = 2/3, mutation_rate = 0.05){
   
   # Setup
   n_card        <- length(cards)
@@ -551,18 +550,18 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
 ```
 
 Finally, the GA in action:
-```{r my_GA in action}
+```{r my_GA in action, cache = TRUE}
 set.seed(123)
-results <- my_GA(n_generations = 2)
+results <- my_GA()
 
 results_A <- results$A
 results_B <- results$B
 
-# 10 strategies of the 2nd generation for player A
-results_A[ , 1 : 10, 2]
+# 10 strategies of the 5th generation for player A
+results_A[ , 1 : 10, 5]
 
-# 2 strategies of the 2nd generation for player B
-results_B[ , , 25 : 26, 2]
+# 2 strategies of the 10th generation for player B
+results_B[ , , 25 : 26, 10]
 ```
 
 ```{r, echo = FALSE}
@@ -573,8 +572,6 @@ save(clean_pop_B,
      file = "functions.RDATA")
 ```
 
-
-[^1]: In this script, I investigate *deterministic* strategies. I will consider strategies with a stochastic element in another script.
 
 [^2]: We will see that there is a more efficient way to compute how profitable two given strategies are is in the long run when opposed to one another.
 
