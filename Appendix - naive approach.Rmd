@@ -60,3 +60,6 @@ print(paste("Player A receives a", card_A, "and bets", bet_A,
             ". Player B receives a", card_B, "and decides to", action_B))
 print(paste("The pot is", pot, "and the result of the hand is:", result))
 ```
+
+
+It is now clear that the main difference between the two approaches is their respective speed. The *naive* approach requires us to loop through a large sunmber of hands in order to determine the average gain of two strategies opposed to one another. Given how slowly `R` handles loops, this makes this approach very inefficient. On the contrary, the *matrix-oriented* approach does not make use of loops to compute the fitness of the strategies; instead, it takes advantage of the rapidity with which `R` conducts operations on matrices.
