@@ -6,8 +6,8 @@ output:
   html_document:
     toc: TRUE
     number_sections: TRUE
-    fig_height: 12
-    fig_width: 10
+    fig_height: 4
+    fig_width: 8
 runtime: shiny
 ---
 
@@ -18,7 +18,7 @@ We experiment with the parameters of our GA to anwser two questions: (i) **what 
 Since our version of poker only allows player A to bluff, we exclusively focus on player A's strategy and how often (s)he bluffs.
 We use a simple definition of bluff: *player A bluffs if (s)he bets large amounts for small cards*. In this script, we assess whether player A bluffs *visually*. The following two plots display two strategies for player A, one with, and one without bluff. They should guide our interpretation of the results.
 
-```{r, fig.height = 5, echo = F}
+```{r, echo = F}
 par(mfrow=c(1,2), cex = 1.1)
 
 barplot(c(12, 7, 8, 2, 3, 3, 12, 15, 18, 17),
