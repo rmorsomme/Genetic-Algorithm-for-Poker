@@ -64,7 +64,7 @@ I also explored the effect of the other parameters of the GA on player A's level
 # Looking Forward
 The current analysis could be improved in several ways.
 
-## Operationalization
+## Instantiation
 So far, we have conducted a visual assessment of player A's level of bluff. Yet, it would be beneficial to have a numerical measure thereof. This way, we could conduct statistical tests on the results. We could for instance take the distance between player A's strategies and a typically conservative strategy as a measure of player A's level of bluff.
 
 Similarly, we could also come up with a measure of how cautious player B's strategies are. Again, we could take the distance between player B's strategies and some baseline strategy as a measure of player B's level of cautiousness.
