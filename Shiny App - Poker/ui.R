@@ -17,7 +17,7 @@ fluidPage(
       
       # Input: Buttons for the parameters
       radioButtons(inputId = "dataset",
-                   label = "Parameters",
+                   label = "Simulation",
                    choices = c("default (ante = 5, mutation rate = 0.05)" = "results_ante_05_mut_05",
                                "ante = 0" = "results_ante_00_mut_01",
                                "ante = 10" = "results_ante_10_mut_05",

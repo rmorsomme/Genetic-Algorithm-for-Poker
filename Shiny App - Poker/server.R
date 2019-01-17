@@ -55,7 +55,7 @@ function(input, output) {
     
     dataset <- get(input$dataset)
     
-    print(paste("Player A bets on average", round(mean(dataset$A[ , , input$generation] ), 2), "per hand."))
+    paste("Player A bets on average", round(mean(dataset$A[ , , input$generation] ), 2), "per hand.")
     
   })
   
@@ -63,7 +63,7 @@ function(input, output) {
     
     dataset <- get(input$dataset)
     
-    print(paste("Player A gains on average", round(mean(dataset$fit[ , , input$generation] ), 2), "per hand."))
+    paste("Player A gains on average", round(mean(dataset$fit[ , , input$generation] ), 2), "per hand.")
     
   })
   
@@ -71,7 +71,7 @@ function(input, output) {
     
     dataset <- get(input$dataset)
     
-    print(paste("Player B calls ", round(100 * mean(dataset$B[ , , , input$generation]  == "Call"), 1), "% of the time.", sep = ""))
+    paste("Player B calls ", round(100 * mean(dataset$B[ , , , input$generation]  == "Call"), 1), "% of the time.", sep = "")
     
   })
   
