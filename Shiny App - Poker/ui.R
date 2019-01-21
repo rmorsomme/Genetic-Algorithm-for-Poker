@@ -25,16 +25,22 @@ fluidPage(
                                "mutation rate = 0.01" = "results_ante_05_mut_01",
                                "mutation rate = 0.1" = "results_ante_05_mut_10")),
       
-      # Horizontal line
-      tags$hr(),
-      
       # Input: Slider for the generation
       sliderInput(inputId = "generation",
                   label = "Generation",
                   min = 1, 
                   max = 125,
                   value = 1,
-                  animate = animationOptions(interval = 250, loop = TRUE))
+                  animate = animationOptions(interval = 250, loop = TRUE)),
+      
+      # Horizontal line
+      tags$hr(),
+      
+      # Text
+      helpText("Upper left corner: the height of the bars corresponds to the size of the bets in player A's best strategy of the generation."),
+      helpText("Upper right corner: the color of the tiles corresponds to player B's action in her/his best strategy of the generation (white is fold and black is call)."),
+      helpText("Lower left corner: the height of the bars corresponds to the average size of the bets effectuated by player A in the generation."),
+      helpText("Lower right corner: the color of the tiles corresponds to the proportion of player B's strategies that call in the generation.")
       
     ),
     
@@ -42,11 +48,12 @@ fluidPage(
     mainPanel(
       
       # Output: barplot
-      plotOutput(outputId = "average"),
-      textOutput(outputId = "av_bet"),
-      textOutput(outputId = "av_gain"),
-      textOutput(outputId = "av_call"),
-      plotOutput(outputId = "best")
+      h3(textOutput(outputId = "title"), align = "center"),
+      plotOutput(outputId = "best"),
+      h6(textOutput(outputId = "av_bet" ), align = "center"),
+      h6(textOutput(outputId = "av_gain"), align = "center"),
+      h6(textOutput(outputId = "av_call"), align = "center"),
+      plotOutput(outputId = "average")
       
     )
   )

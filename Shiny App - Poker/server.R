@@ -7,25 +7,10 @@ load("results.RDATA")
 # Server
 function(input, output) {
   
-  output$average <- renderPlot({
+  output$title <- renderText({
     
-    dataset <- get(input$dataset)
-    #dataset <- reactive({ get(input$dataset) })
+    paste("Generation", input$generation)
     
-    par(mfrow = c(1, 2))
-    
-    barplot(rowMeans(dataset$A[ , , input$generation]), 
-            ylim = c(0, 20),
-            main = "Average Strategy for Player A",
-            xlab = "Player A's Card",
-            ylab = "Average Bet")
-    abline(h=seq(0,20,2), lty=2)
-    
-    image(1:10, seq(0,20,2),
-          rowMeans(dataset$B[ , , , input$generation] == "Call", dims = 2),
-          col = gray((100 : 0) / 100),
-          main = "Average Strategy for Player B",
-          xlab = "Player B's Card", ylab = "Player A's bet")
   })
   
   output$best <- renderPlot({
@@ -49,6 +34,27 @@ function(input, output) {
           main = "Best Strategy for Player B",
           xlab = "Player B's Card",
           ylab = "Player A's bet")
+  })
+  
+  output$average <- renderPlot({
+    
+    dataset <- get(input$dataset)
+    #dataset <- reactive({ get(input$dataset) })
+    
+    par(mfrow = c(1, 2))
+    
+    barplot(rowMeans(dataset$A[ , , input$generation]), 
+            ylim = c(0, 20),
+            main = "Average Strategy for Player A",
+            xlab = "Player A's Card",
+            ylab = "Average Bet")
+    abline(h=seq(0,20,2), lty=2)
+    
+    image(1:10, seq(0,20,2),
+          rowMeans(dataset$B[ , , , input$generation] == "Call", dims = 2),
+          col = gray((100 : 0) / 100),
+          main = "Average Strategy for Player B",
+          xlab = "Player B's Card", ylab = "Player A's bet")
   })
   
   output$av_bet <- renderText({
