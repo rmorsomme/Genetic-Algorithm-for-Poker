@@ -2,7 +2,9 @@
 # Setup
 library(shiny)
 library(ggplot2)
-load("results.RDATA")
+load("results0.RDATA")
+load("results5.RDATA")
+load("results10.RDATA")
 
 fluidPage(
   
@@ -15,15 +17,20 @@ fluidPage(
     # Sidebar panel for inputs
     sidebarPanel(
       
-      # Input: Buttons for the parameters
-      radioButtons(inputId = "dataset",
-                   label = "Simulation",
-                   choices = c("default (ante = 5, mutation rate = 0.05)" = "results_ante_05_mut_05",
-                               "ante = 0" = "results_ante_00_mut_01",
-                               "ante = 10" = "results_ante_10_mut_05",
-                               "mutation rate = 0.001" = "results_ante_05_mut_001",
-                               "mutation rate = 0.01" = "results_ante_05_mut_01",
-                               "mutation rate = 0.1" = "results_ante_05_mut_10")),
+      # Input: Buttons for the ante
+      radioButtons(inputId = "ante",
+                   label = "Ante",
+                   choices = c("0",
+                               "5",
+                               "10")),
+      
+      # Input: Buttons for the mutation rate
+      radioButtons(inputId = "mut_rat",
+                   label = "Mutaton Rate",
+                   choices = c("0.001",
+                               "0.01",
+                               "0.05",
+                               "0.1")),
       
       # Input: Slider for the generation
       sliderInput(inputId = "generation",
@@ -49,10 +56,13 @@ fluidPage(
       
       # Output: barplot
       h3(textOutput(outputId = "title"), align = "center"),
+      
       plotOutput(outputId = "best"),
+      
       h6(textOutput(outputId = "av_bet" ), align = "center"),
       h6(textOutput(outputId = "av_gain"), align = "center"),
       h6(textOutput(outputId = "av_call"), align = "center"),
+      
       plotOutput(outputId = "average")
       
     )

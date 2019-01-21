@@ -12,23 +12,44 @@ Since RMD script with a shiny component still runs the chunks that are cached (`
 
 library(tidyverse)
 library(gdata)
+library(rlang)
 
 # Setup
 load("functions.RDATA")
-n_generation <- 125
+n_generation <- 150
 set.seed(123)
 
 # Running the GA
-results_ante_05_mut_05  <- my_GA(n_generation = n_generation)
-results_ante_10_mut_05  <- my_GA(ante = 10, n_generation = n_generation)
-results_ante_00_mut_01  <- my_GA(ante = 0, mutation_rate = 0.01, n_generation = n_generation)
-results_ante_05_mut_01  <- my_GA(mutation_rate = 0.01, n_generation = n_generation)
-results_ante_05_mut_10  <- my_GA(mutation_rate = 0.1, n_generation = n_generation)
-results_ante_05_mut_001 <- my_GA(mutation_rate = 0.001, n_generations = n_generation)
 
-# Saving results
-save(results_ante_05_mut_05, results_ante_10_mut_05,
-     results_ante_00_mut_01, results_ante_05_mut_01,
-     results_ante_05_mut_10, results_ante_05_mut_001,
-     file = "Shiny App - Poker/results.RDATA")
+antes <- c(0, 5, 10)
+mut_rates <- c(0.001, 0.01, 0.05, 0.1)
+
+for(ante in antes){
+  
+  simul_names <- character(0)
+  
+  for(mut_rate in mut_rates){
+    
+    simul_name <- paste("results_ante_", ante, "mut_", mut_rate, sep = "")
+    simul_results <- my_GA(n_generation = n_generation,
+                           ante = ante,
+                           mutation_rate = mut_rate)
+    
+    assign(simul_name,
+           simul_results)
+    
+    simul_names <- c(simul_names, simul_name)
+    
+    print(mut_rate)
+    
+  }
+  
+  # Saving results
+  save(
+    list = simul_names,
+    file = paste("Shiny App - Poker/results", ante, ".RDATA", sep = "")
+       )
+  
+}
+
 ```

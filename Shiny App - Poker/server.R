@@ -2,7 +2,9 @@
 # Setup
 library(shiny)
 library(ggplot2)
-load("results.RDATA")
+load("results0.RDATA")
+load("results5.RDATA")
+load("results10.RDATA")
 
 # Server
 function(input, output) {
@@ -16,7 +18,13 @@ function(input, output) {
   output$best <- renderPlot({
     
     par(mfrow = c(1, 2))
-    dataset <- get(input$dataset)
+    
+    
+    dataset <- get(
+      paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
+    )
+    #dataset <- reactive({ get(input$dataset) })
+    
     fitness <- dataset$fit[ , , input$generation]
     strat_fittest_A <- names(sort(colMeans(fitness), decreasing  = T)[1])
     strat_fittest_B <- names(sort(rowMeans(-fitness), decreasing  = T)[1])
@@ -38,8 +46,9 @@ function(input, output) {
   
   output$average <- renderPlot({
     
-    dataset <- get(input$dataset)
-    #dataset <- reactive({ get(input$dataset) })
+    dataset <- get(
+      paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
+    )
     
     par(mfrow = c(1, 2))
     
@@ -59,7 +68,9 @@ function(input, output) {
   
   output$av_bet <- renderText({
     
-    dataset <- get(input$dataset)
+    dataset <- get(
+      paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
+    )
     
     paste("Player A bets on average", round(mean(dataset$A[ , , input$generation] ), 2), "per hand.")
     
@@ -67,7 +78,9 @@ function(input, output) {
   
   output$av_gain <- renderText({
     
-    dataset <- get(input$dataset)
+    dataset <- get(
+      paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
+    )
     
     paste("Player A gains on average", round(mean(dataset$fit[ , , input$generation] ), 2), "per hand.")
     
@@ -75,7 +88,9 @@ function(input, output) {
   
   output$av_call <- renderText({
     
-    dataset <- get(input$dataset)
+    dataset <- get(
+      paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
+    )
     
     paste("Player B calls ", round(100 * mean(dataset$B[ , , , input$generation]  == "Call"), 1), "% of the time.", sep = "")
     
