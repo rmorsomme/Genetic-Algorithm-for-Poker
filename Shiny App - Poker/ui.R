@@ -18,26 +18,29 @@ fluidPage(
     sidebarPanel(
       
       # Input: Buttons for the ante
-      radioButtons(inputId = "ante",
-                   label = "Ante",
-                   choices = c("0",
-                               "5",
-                               "10")),
+      selectInput(inputId = "ante",
+                  label = "Ante",
+                  choices = c("0",
+                              "5",
+                              "10"),
+                  selected = "5"),
       
       # Input: Buttons for the mutation rate
-      radioButtons(inputId = "mut_rat",
-                   label = "Mutaton Rate",
-                   choices = c("0.001",
-                               "0.01",
-                               "0.05",
-                               "0.1")),
+      selectInput(inputId = "mut_rat",
+                  label = "Mutaton Rate",
+                  choices = c("0.001",
+                              "0.01",
+                              "0.05",
+                              "0.1"),
+                  selected = "0.05"),
       
       # Input: Slider for the generation
       sliderInput(inputId = "generation",
                   label = "Generation",
                   min = 1, 
-                  max = 125,
-                  value = 1,
+                  max = 150,
+                  value = 5,
+                  step = 5,
                   animate = animationOptions(interval = 250, loop = TRUE)),
       
       # Horizontal line
