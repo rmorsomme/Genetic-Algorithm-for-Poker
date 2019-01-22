@@ -19,7 +19,6 @@ function(input, output) {
     
     par(mfrow = c(1, 2))
     
-    
     dataset <- get(
       paste("results_ante_", input$ante, "mut_", input$mut_rat, sep = "")
     )

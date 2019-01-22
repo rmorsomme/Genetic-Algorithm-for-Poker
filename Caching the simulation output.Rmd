@@ -40,8 +40,6 @@ for(ante in antes){
     
     simul_names <- c(simul_names, simul_name)
     
-    print(mut_rate)
-    
   }
   
   # Saving results
