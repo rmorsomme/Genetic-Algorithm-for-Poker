@@ -34,6 +34,7 @@ Before delving into the GA itself, we examine the representation of the strategi
 Player A's strategy is represented with a vector of numerical values indicating the amount to bet for each card (s)he could receive. If we consider a game where player A can effectuate the following bets `r seq(0,10,2)` and the cards are `r 1:4`, the following is a possible strategy for player A
 ```{r strategy A example, echo=F}
 strategy_A <- array(c(0, 10, 2, 8), dim = c(4,1), dimnames = list(1:4, "Strategy A"))
+
 # Strategy for player A
 print(strategy_A)
 ```
@@ -42,6 +43,7 @@ which prescribes to bet `0` for a card `1`, `10` (a bluff!) for a `2`, `2` for a
 Player B's strategy is represented with a matrix whose entries indicate the action to realize - to *fold* or to *call* - for each possible combination of her/his card (columns) and player A's bet (rows). The following is a possible strategy for player B
 ```{r strategy B example, echo=F}
 strategy_B <- array(c("Fold", "Fold", "Call", "Fold", "Call", "Fold", "Fold", "Fold", "Call", "Fold", "Call","Call", "Fold","Call", "Fold", "Call","Call", "Fold", "Fold", "Fold", "Call", "Fold", "Fold", "Call"), dim=c(6,4, 1), dimnames=list(seq(0, 10, 2), 1:4, "Strategy B"))
+
 # Strategy for Player B
 print(strategy_B)
 ```
@@ -70,8 +72,10 @@ strategy_A <- array(data = sample(x = bets, size = n_card, replace = TRUE),
                     dim = c(n_card, 1), dimnames = list(cards, "Strategy A"))
 strategy_B <- array(data = sample(x = c("Call", "Fold"), size = n_card * n_bet, replace = TRUE),
                     dim=c(n_card, n_bet, 1), dimnames = list(cards, bets, "Strategy B"))
+
 # Random strategy for player A
 print(strategy_A)
+
 # Random strategy for player B
 print(strategy_B)
 ```
@@ -87,8 +91,6 @@ The *matrix-oriented* approach uses matrices and matrix operations (fast on `R`)
 The matrix `bet_A` represents player A's bet for each possible hand. Since player A's bet depends only on her/his card, each column of `bet_A` contains the same values.
 ```{r step 1}
 bet_A <- array(rep(strategy_A, each = n_card), dim = dim_mat, dimnames = dimname_mat)
-# Player A's strategy
-print(strategy_A)
 # Player A's bet
 print(bet_A)
 ```
@@ -98,8 +100,7 @@ print(bet_A)
 The matrix `action_B` represents player B's action. Since each column of `bet_A` contains the same values, `action_B` is simply a re-ordering of `strategy_B`'s columns.
 ```{r step 2}
 action_B <- array(strategy_B[ , match(x = strategy_A, table = bets), 1], dim = dim_mat, dimnames = dimname_mat)
-# Player B's strategy
-print(strategy_B)
+
 # Player B's action
 print(action_B)
 ```
@@ -110,6 +111,7 @@ print(action_B)
 ```{r step 3}
 pot_size                     <- 2 * ante + 2 * bet_A 
 pot_size[action_B == "Fold"] <- 2 * ante
+
 # Size of the pot
 print(pot_size)
 ```
@@ -124,6 +126,7 @@ upperTriangle(win_game, diag = F) <-  1
 lowerTriangle(win_game, diag = F) <- -1
 
 win_game[action_B == "Fold"] <- 1
+
 # Winner of the hand
 print(win_game)
 ```
@@ -170,11 +173,13 @@ dimname_pop_B <- list(cards , bets , name_strategy)  # for convenience
 set.seed(123)
 pop_A <- array(sample(x = bets, size = prod(dim_pop_A), replace = TRUE),
                dim = dim_pop_A, dimnames = dimname_pop_A)
+
 # Population of random strategies for player A
 print(pop_A)
 set.seed(123)
 pop_B <- array(sample(x = c("Call", "Fold"), size = prod(dim_pop_B), replace = TRUE),
                dim = dim_pop_B, dimnames = dimname_pop_B)
+
 # Population of random strategies for player B (2 strategies)
 print(pop_B[ , , 1 : 2])
 ```
@@ -189,8 +194,9 @@ clean_pop_B <- function(pop, cards){
 }
 
 pop_B <- clean_pop_B(pop = pop_B, cards = cards)
+
 # Clean population for player B
-print(pop_B[,,1:2]) # Compare with the strategies before the cleaning (printed above).
+print(pop_B[ , , 1 : 2]) # Compare with the strategies before the cleaning (printed above).
 ```
 
 ## Fitness of a Strategy
@@ -220,15 +226,9 @@ confront <- function(strategy_A, strategy_B, n_card, dim_mat, bets, ante, win_ga
 
 Let us look at the function `confront()` in action.
 ```{r confront example}
-strat_A <- pop_A[ , 3, drop = FALSE]
-print(strat_A)
-
-strat_B <- pop_B[ , , 1]
-print(strat_B)
-
-confront(strategy_A = strat_A, strategy_B = strat_B,
-         n_card = n_card, dim_mat = dim_mat, bets = bets,
-         ante = ante, win_game = win_game)
+confront(strategy_A = pop_A[ ,   3],
+         strategy_B = pop_B[ , , 1],
+         n_card = n_card, dim_mat = dim_mat, bets = bets, ante = ante, win_game = win_game)
 ```
 
 This means that, on average, `strat_A`, wins `-0.625` for each hand played against `strat_B`. Since the matrix-oriented approach simulates each possible hand once, the function `confront()` computes the *true* average gain of `strat_A` when opposed to `strat_B`.
@@ -256,12 +256,10 @@ confront_populations <- function(pop_A, pop_B, name_strategy, fitness, n_card,
 
 Let us look at the function `confront_populations()` in action.
 ```{r fitness I}
-print(pop_A)
-print(pop_B[ , , 1 : 2])
+fitness <- confront_populations(pop_A = pop_A,
+                                pop_B = pop_B,
+                                fitness = fitness, name_strategy = name_strategy, win_game = win_game, n_card = n_card, dim_mat = dim_mat, bets = bets, ante = ante)
 
-fitness <- confront_populations(pop_A = pop_A, pop_B = pop_B, fitness = fitness,
-                                name_strategy = name_strategy, win_game = win_game,
-                                n_card = n_card, dim_mat = dim_mat, bets = bets, ante = ante)
 # Average gains of player A's strategies
 print(fitness)
 ```
@@ -269,9 +267,10 @@ print(fitness)
 Taking the mean of the columns of the matrix `fitness` gives us the level of fitness player A's strategies; the same operation conducted on the rows of the matrix `- fitness` (the opposite of `fitness`) gives us the level of fitness of player B's strategies.
 ```{r fitness II}
 # Fitness of player A's strategy
-sort(colMeans(fitness), decreasing = T)
+sort(colMeans(fitness), decreasing = TRUE)
+
 # Fitness of player B's strategy
-sort(rowMeans(-fitness), decreasing = T)
+sort(rowMeans(-fitness), decreasing = TRUE)
 ```
 Let us have a closer look at these results and focus on player A' strategies (easier to analyze than player B's). `s5` and `s8` are the best performing strategy. They are conservative strategies with small bets for small cards and large bets for large cards. With `s5`, player A wins on average `r colMeans(fitness)["s5"]` per hand against player B's strategies; with `s8`, player A wins on average `r colMeans(fitness)["s8"]` per hand. On the opposite spectrum, `s9` and `s10` have the lowest level of fitness. Both strategies prescribe to effectuates large bets for small cards and small bets for large cards. `s10` even prescribes to bet `2` (very small bet) for a `4` (highest card)! Although the large bets for small cards could be bluffs and are thus not bad per se, betting only `2` for the highest card is definitely a bad idea in this one-round version of poker. Player A loses on average `r -colMeans(fitness)["s9"]` with `s9` and `r -colMeans(fitness)["s10"]` with `s10`.
 
@@ -292,11 +291,13 @@ n_children <- 5
 
 fitness_sorted  <- sort(colMeans(fitness), decreasing  = T)
 fitness_parents <- head(fitness_sorted, n_parents)
+
 # Name and fitness of the set of parent strategies
 print(fitness_parents)
 
 name_parents    <- names(fitness_parents)
 parents         <- pop_A[ , names(fitness_parents)]
+
 # Set of parent strategies
 print(parents)
 ```
@@ -313,6 +314,7 @@ pop_child <- array(sample(name_parents, size = n_card * n_children, replace = TR
                           prob = exp(fitness_parents)), # exp() ensures positive probabilities
                   dim      = c   (n_card, n_children),
                   dimnames = list(cards , paste("Child", 1 : n_children)))
+
 # Origin of the element of the child strategies
 print(pop_child)
 ```
@@ -332,6 +334,7 @@ for(name_parent in name_parents){
 pop_child <- array(as.numeric(pop_child),
                    dim = c(n_card, n_children),
                    dimnames = list(cards, paste("Child", 1:n_children)))
+
 # Population of children strategies
 print(pop_child)
 ```
@@ -346,15 +349,18 @@ mutation_location <- array(sample(c(T, F), size = n_card * n_children, replace =
                                   prob = c(mutation_rate, 1 - mutation_rate)),
                            dim     = c    (n_card, n_children), 
                            dimnames = list(cards , paste("Child", 1 : n_children)))
+
 # Location of mutations
 print(mutation_location)
 
 n_mutation       <- sum(mutation_location)
-mutation_outcome <- sample(bets, size = n_mutation, T)
+mutation_outcome <- sample(bets, size = n_mutation, replace = TRUE)
+
 # Outcome of mutations
 print(mutation_outcome)
 
 pop_child[mutation_location] <- mutation_outcome
+
 # Population of child strategies after mutations
 print(pop_child)
 ```
@@ -450,7 +456,7 @@ Let us look at the function `generate_A` in action.
 # Parent Strategies
 print(pop_A) # random bets for small cards
 
-# Child Strategies (small bets for small cards)
+# Child Strategies (small bets for small cards, the GA is already learning good strategies)
 generate_A(fitness = fitness, pop = pop_A, n_parents = n_parents,
            dim_pop_A = dim_pop_A, dimname_pop_A = dimname_pop_A,
            n_strategy = n_strategy, bets = bets, mutation_rate = 0.05)
@@ -463,6 +469,8 @@ Now that we have covered all the components of the GA, we can finally write the 
 my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
                   n_generations = 10, prop_parents = 2/3, mutation_rate = 0.05){
   
+  
+  #
   # Setup
   n_card        <- length(cards)
   n_bet         <- length(bets)
@@ -495,7 +503,8 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
   output_A  <- array(NA, dim = dim_output_A, dimnames = dimname_output_A)
   output_B  <- array(NA, dim = dim_output_B, dimnames = dimname_output_B)
   fitness_A <- array(NA, dim = dim_fit_A   , dimnames = dimname_fit_A   )
-
+  
+  #
   # Initialization
   generation <- 1
   
@@ -508,7 +517,7 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
   output_A[ , ,   generation] <- pop_A
   output_B[ , , , generation] <- pop_B
   
-  
+  #
   # Loop
   while(generation < n_generations){
 
