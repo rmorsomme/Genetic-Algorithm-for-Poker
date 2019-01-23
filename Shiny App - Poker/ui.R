@@ -40,7 +40,7 @@ fluidPage(
                   min = 1, 
                   max = 150,
                   value = 5,
-                  step = 5,
+                  step = 1,
                   animate = animationOptions(interval = 250, loop = TRUE)),
       
       # Horizontal line
