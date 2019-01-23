@@ -5,6 +5,6 @@ account: rmorsomme
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 638470
-bundleId: 1831192
+bundleId: 1831589
 url: https://rmorsomme.shinyapps.io/shiny_app_-_poker/
-when: 1548234743.0821
+when: 1548247491.68615

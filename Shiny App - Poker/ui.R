@@ -23,7 +23,7 @@ fluidPage(
                   choices = c("0",
                               "5",
                               "10"),
-                  selected = "5"),
+                  selected = "0"),
       
       # Input: Buttons for the mutation rate
       selectInput(inputId = "mut_rat",
@@ -32,7 +32,7 @@ fluidPage(
                               "0.01",
                               "0.05",
                               "0.1"),
-                  selected = "0.05"),
+                  selected = "0.01"),
       
       # Input: Slider for the generation
       sliderInput(inputId = "generation",
