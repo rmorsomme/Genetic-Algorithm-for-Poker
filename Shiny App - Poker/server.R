@@ -25,8 +25,8 @@ function(input, output) {
     #dataset <- reactive({ get(input$dataset) })
     
     fitness <- dataset$fit[ , , input$generation]
-    strat_fittest_A <- names(sort(colMeans(fitness), decreasing  = T)[1])
-    strat_fittest_B <- names(sort(rowMeans(-fitness), decreasing  = T)[1])
+    strat_fittest_A <- names(sort(colMeans(fitness), decreasing  = TRUE)[1])
+    strat_fittest_B <- names(sort(rowMeans(-fitness), decreasing  = TRUE)[1])
     
     barplot(dataset$A[ , strat_fittest_B, input$generation], 
             ylim = c(0, 20),

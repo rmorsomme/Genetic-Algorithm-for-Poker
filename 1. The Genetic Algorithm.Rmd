@@ -368,7 +368,7 @@ generate_A <- function(fitness, pop, n_parents, dim_pop_A, dimname_pop_A,
   
   # Parent Selection
   fitness_strategy <- colMeans(fitness)
-  fitness_parents  <- head(sort(fitness_strategy, decreasing  = T), n_parents)
+  fitness_parents  <- head(sort(fitness_strategy, decreasing  = TRUE), n_parents)
   name_parents     <- names(fitness_parents)
   parents          <- pop[ , name_parents]
   
@@ -388,7 +388,7 @@ generate_A <- function(fitness, pop, n_parents, dim_pop_A, dimname_pop_A,
   pop <- array(as.numeric(pop), dim = dim_pop_A, dimnames = dimname_pop_A)
   
   # Mutation
-  mutation_location <- array(sample(c(T, F), size = prod(dim_pop_A), T,
+  mutation_location <- array(sample(c(T, F), size = prod(dim_pop_A), TRUE,
                                     prob = c(mutation_rate, 1-mutation_rate)),
                              dim = dim_pop_A, dimnames = dimname_pop_A)
   
@@ -409,15 +409,15 @@ generate_B <- function(fitness, pop, n_parents, dim_pop_B, dimname_pop_B,
   # Parent Selection
   fitness          <- - fitness
   fitness_strategy <- rowMeans(fitness)
-  fitness_parents  <- head(sort(fitness_strategy, decreasing  = T), n_parents)
+  fitness_parents  <- head(sort(fitness_strategy, decreasing = TRUE), n_parents)
   name_parents     <- names(fitness_parents)
   parents          <- pop[ , , name_parents]
   
   # Crossover
-  pop <- array(sample(name_parents, size = prod(dim_pop_B), replace = T,
+  pop <- array(sample(name_parents, size = prod(dim_pop_B), replace = TRUE,
                       prob = exp(fitness_parents)),
                dim = dim_pop_B, dimnames = dimname_pop_B)
-    0
+    
   for(parent in name_parents){
     
     strategy_parent <- parents[ , , parent]
@@ -499,9 +499,9 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
   # Initialization
   generation <- 1
   
-  pop_A <- array(sample(bets, size = prod(dim_pop_A), replace = T),
+  pop_A <- array(sample(bets, size = prod(dim_pop_A), replace = TRUE),
                  dim = dim_pop_A, dimnames = dimname_pop_A)
-  pop_B <- array(sample(c("Call", "Fold"), size = prod(dim_pop_B), replace = T),
+  pop_B <- array(sample(c("Call", "Fold"), size = prod(dim_pop_B), replace = TRUE),
                  dim = dim_pop_B, dimnames = dimname_pop_B)
   pop_B <- clean_pop_B(pop_B, cards = cards)
   
