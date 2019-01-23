@@ -505,7 +505,7 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
                  dim = dim_pop_B, dimnames = dimname_pop_B)
   pop_B <- clean_pop_B(pop_B, cards = cards)
   
-  output_A[ , , generation  ] <- pop_A
+  output_A[ , ,   generation] <- pop_A
   output_B[ , , , generation] <- pop_B
   
   
@@ -529,11 +529,11 @@ my_GA <- function(cards = 1:10, bets = seq(0,20,2), ante = 5, n_strategy = 200,
                         mutation_rate = mutation_rate)
     
     # Output
-    fitness_A[ , , generation ] <- fitness
+    fitness_A[ , ,   generation    ] <- fitness
+    output_A [ , ,   generation + 1] <- pop_A
+    output_B [ , , , generation + 1] <- pop_B
     
     generation <- generation + 1
-    output_A[ , , generation  ] <- pop_A
-    output_B[ , , , generation] <- pop_B
     
   } # close for-loop
   
