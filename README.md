@@ -1,1 +1,1 @@
-Shiny to visualize the results available on https://rmorsomme.shinyapps.io/shiny_app_-_poker/
+Shiny App to visualize the results of the simulation available on https://rmorsomme.shinyapps.io/shiny_app_-_poker/
