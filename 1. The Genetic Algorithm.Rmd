@@ -32,7 +32,11 @@ Before delving into the GA itself, we examine how to represent the players' stra
 ## Representation of Strategies
 Player A's strategy is represented with a vector of numerical values indicating the amount to bet for each card (s)he could receive. If we consider a game where player A can effectuate the following bets `r seq(0,10,2)` and the cards are `r 1:4`, the following is a possible strategy for player A
 ```{r strategy A example, echo=F}
-strategy_A <- array(c(0, 10, 2, 8), dim = c(4,1), dimnames = list(1:4, "Strategy A"))
+strategy_A <- array(
+  data = c(0, 10, 2, 8), 
+  dim      = c   (4    ,1            ), 
+  dimnames = list(1 : 4, "Strategy A")
+  )
 
 # Strategy for player A
 print(strategy_A)
@@ -41,7 +45,11 @@ which prescribes to bet `0` for a card `1`, `10` (a bluff!) for a `2`, `2` for a
 
 Player B's strategy is represented with a matrix whose entries indicate the action to realize - to *fold* or to *call* - for each possible combination of her/his card (columns) and player A's bet (rows). The following is a possible strategy for player B
 ```{r strategy B example, echo=F}
-strategy_B <- array(c("Fold", "Fold", "Call", "Fold", "Call", "Fold", "Fold", "Fold", "Call", "Fold", "Call","Call", "Fold","Call", "Fold", "Call","Call", "Fold", "Fold", "Fold", "Call", "Fold", "Fold", "Call"), dim=c(6,4, 1), dimnames=list(seq(0, 10, 2), 1:4, "Strategy B"))
+strategy_B <- array(
+  data = c("Fold", "Fold", "Call", "Fold", "Call", "Fold", "Fold", "Fold", "Call", "Fold", "Call","Call", "Fold","Call", "Fold", "Call","Call", "Fold", "Fold", "Fold", "Call", "Fold", "Fold", "Call"),
+  dim      = c   (6            ,4   , 1           ),
+  dimnames = list(seq(0, 10, 2), 1:4, "Strategy B")
+  )
 
 # Strategy for Player B
 print(strategy_B)
@@ -57,10 +65,10 @@ ante   <- 2
 cards  <- 1:4        
 bets   <- seq(from = 0, to = 10, by = 2)
 
-n_card      <- length(cards)      # for convenience
-n_bet       <- length(bets)       # for convenience
-dim_mat     <- c(n_card, n_card)  # for convenience (see matrix-oriented approach)
-dimname_mat <- list(cards, cards) # for convenience (see matrix-oriented approach)
+n_card      <- length(cards)         # for convenience
+n_bet       <- length(bets)          # for convenience
+dim_mat     <- c   (n_card, n_card)  # for convenience (see matrix-oriented approach)
+dimname_mat <- list(cards , cards )  # for convenience (see matrix-oriented approach)
 ```
 
 We also use `sample()` in `array()` to create random strategies for the two players and assign them to `strategy_A` and `strategy_B`.
@@ -109,7 +117,8 @@ The matrix `action_B` represents player B's action. Since each column of `bet_A`
 ```{r step 2}
 action_B <- array(
   data = strategy_B[ , match(x = strategy_A, table = bets), 1],
-  dim = dim_mat, dimnames = dimname_mat)
+  dim = dim_mat, dimnames = dimname_mat
+  )
 
 # Player B's action
 print(action_B)
@@ -177,9 +186,9 @@ A population of strategies is simply a collection of strategies. For player A, i
 n_strategy    <- 10
 name_strategy <- paste("s", 1 : n_strategy, sep = "")
 
-dim_pop_A     <- c   (n_card, n_strategy)            # for convenience
-dimname_pop_A <- list(cards , name_strategy)         # for convenience
-dim_pop_B     <- c   (n_card, n_bet, n_strategy)     # for convenience
+dim_pop_A     <- c   (n_card       , n_strategy   )  # for convenience
+dimname_pop_A <- list(cards        , name_strategy)  # for convenience
+dim_pop_B     <- c   (n_card, n_bet, n_strategy   )  # for convenience
 dimname_pop_B <- list(cards , bets , name_strategy)  # for convenience
 
 set.seed(123)
@@ -370,7 +379,7 @@ for(name_parent in name_parents){
 
 pop_child <- array(
   data = as.numeric(pop_child),
-  dim      = c   (n_card, n_children                  ),
+  dim      = c   (n_card, n_children                    ),
   dimnames = list(cards , paste("Child", 1 : n_children))
   )
 
@@ -387,7 +396,7 @@ mutation_rate <- 0.2
 mutation_location <- array(
   data = sample(c(T, F), size = n_card * n_children, replace = TRUE,
                 prob = c(mutation_rate, 1 - mutation_rate)),
-  dim      = c   (n_card, n_children), 
+  dim      = c   (n_card, n_children                    ), 
   dimnames = list(cards , paste("Child", 1 : n_children))
   )
 
@@ -444,7 +453,7 @@ generate_A <- function(fitness, pop, n_parents, dim_pop_A, dimname_pop_A,
     )
   
   n_mutations      <- sum(mutation_location)
-  mutation_outcome <- sample(bets, size = n_mutations, replace = T)
+  mutation_outcome <- sample(bets, size = n_mutations, replace = TRUE)
   
   pop[mutation_location] <- mutation_outcome
   
