@@ -6,9 +6,15 @@ output:
   github_document
 ---
 
-Since RMD script with a shiny component still runs the chunks that are cached (`cache = TRUE`), I cache the output of the GA (very time consuming) by hand.
 
-```{r, eval = FALSE}
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(cache.path = "Cache/Simulation/")
+```
+
+
+I simulate `150` generations with the GA across three levels of ante (`ante`) `r c(0, 5, 10)` and four levels of mutation rate (`mut_rates`) `r  c(0.001, 0.01, 0.05, 0.1)` and save the results for the [Shiny App](https://rmorsomme.shinyapps.io/shiny_app_-_poker/).
+
+```{r simulation, cache = TRUE, message = FALSE}
 
 library(tidyverse)
 library(gdata)
