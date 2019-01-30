@@ -15,22 +15,21 @@ library(gdata)
 In this script, I use a genetic algorithm (GA) to learn strategies for a fairly simple version of poker. I investigate poker because I love playing this game, and to use a GA because it offers a nice coding challenge and is a suitable method for learning good strategies for this game. Compared to gradient-descent-based learning methods, GAs are less likely to be trapped into local minima. A question that I want to answer at the end of the script is *what conditions encourage people to bluff*.
 
 # Background
+Let us kick off this script by presenting how our fairly simple version of poker is played, how the players' strategies are represented and how a hand is simulated. 
 
 ## A Simple Version of Poker
-We consider a fairly simple version of poker with only two players: player A and player B. A hand starts with each player paying an *ante* (small predetermined amount) and receiving a single card. Player A then effectuates a *bet* and player B decides to either *fold* or *call*. If player B folds, then player A wins the hand and recuperates the pot (two antes). If player B calls, then the players with the highest card wins the hand and recuperates the pots (two antes and two bets). If player B calls and both players have the same card, they simply share the pot.
+We consider a fairly simple version of poker with only two players (A and B). At the beginning of a hand, each player pays an *ante* (small predetermined amount) and receives a single card. Player A then effectuates a *bet* and player B decides to either *fold* or *call*. If player B folds, then player A wins the hand and recuperates the pot (two antes). If player B calls, then the players with the highest card wins the hand and recuperates the pots (two antes and two bets). If player B calls and both players have the same card, they simply share the pot.
 
 In short, a hand follows **5 steps** in which we determine:
 
-1. **Player A's bet** based on player A's strategy and player A's card.
-2. **Player B's action** based on player B's strategy, player B's card and player A's bet.
+1. **Player A's bet** based on player A's card and strategy.
+2. **Player B's action** based on player B's card and strategy, and player A's bet.
 3. **The size of the pot** based on player A's bet and player B's action.
-4. **The winner of the hand** given player B's action and the cards of the two players.
+4. **The winner of the hand** based on player B's action and the cards of the two players.
 5. **The gain/loss** of each player at the end of the hand.
 
-Before delving into the GA itself, we examine how to represent the players' strategies and, and how to simulate a hand.
-
 ## Representation of Strategies
-Player A's strategy is represented with a vector of numerical values indicating the amount to bet for each card (s)he could receive. If we consider a game where player A can effectuate the following bets `r seq(0,10,2)` and the cards are `r 1:4`, the following is a possible strategy for player A
+Player A's strategy is represented with a vector of numerical values indicating the amount to bet for each card (s)he could receive. If we consider a game where the bets `r seq(0,10,2)` are allowed and the cards are `r 1:4`, the following is a possible strategy for player A
 ```{r strategy A example, echo=F}
 strategy_A <- array(
   data = c(0, 10, 2, 8), 
@@ -168,7 +167,9 @@ print(- gain_A)
 # The Genetic Algorithm
 
 ## Overview
-In order to learn good strategies for our two players, we use a genetic algorithm (GA). Simply put, a GA loosely imitates the process of *natural selection*: from an existing population, the fittest individuals are crossed over to generate new individuals replacing the old ones. This way, features that make individuals fit are passed on to the next generation; and after several iterations, the GA produce population of fit individuals. In this script, we design a GA that learns profitable strategies for our two poker players. The question that we want to answer is *under which circumstances the GA learns strategies that prescribe to bluff*.
+In order to learn good strategies for our two players, we use a genetic algorithm (GA). Simply put, a GA loosely imitates the process of *natural selection*: from an existing population, the fittest individuals are crossed over to generate new individuals replacing the old ones. This way, features that make individuals fit are passed on to the next generation; and after several iterations, the GA produces a population of fit individuals.
+
+In this script, we design a GA that learns profitable strategies for our two poker players. The question that we want to answer is *under which circumstances the GA learns strategies that prescribe to bluff*.
 
 In practice, we first generate a initial population (a collection) of random strategies for each player. We then make each strategy of player A play against each strategy of player B. Based on the results of these confrontations, we determine how competitive (how fit) each strategy is. Finally, for each player, we cross over the most competitive strategies together to generate a new population (the following generation) of strategies. The GA algorithm then works in an iterative manner: confrontation, evaluation and generation.
 
@@ -180,7 +181,7 @@ In short, the GA follows **5 steps**:
 4. **Generation of new populations of strategies** from the fittest strategies.
 5. **Repeat from step 2.**
 
-The following sections explore in more depth the concepts of population, fitness, confrontation, evaluation and strategy generation. Once these concepts have been explained, we will be able to run the GA. A reader familiar with GAs can therefore skip the rest of this script and directly start to read the *Results and Discussion* script, and use the [Shiny App](https://rmorsomme.shinyapps.io/shiny_app_-_poker/) to explore the results of the simulations.
+The following sections explore in more depth the concepts of population, fitness, confrontation, evaluation and strategy generation. Once these concepts have been explained, we will be able to run the GA. A reader familiar with GAs can skip the rest of this script and directly start to read the *Results and Discussion* script and use the [Shiny App](https://rmorsomme.shinyapps.io/shiny_app_-_poker/) to explore the results of the simulations.
 
 ## Population of Strategies
 A population of strategies is simply a collection of strategies. For player A, it is represented with a matrix where each column corresponds to a strategy. For player B, it is represented with a three-dimensional array where each layer (dimension `3`) corresponds to a strategy. The following code creates populations of ten random strategies for player A and player B. To easily identify the strategies, we name them `r paste("s", 1 : 10, sep="")`.
@@ -260,6 +261,7 @@ confront <- function(strategy_A, strategy_B,
   gain_A                     <- (ante + bet_A) * win_game
   gain_A[action_B == "Fold"] <-  ante
   
+  
   #
   # Return average gain for player A across all possible hands
   return(mean(gain_A))
@@ -311,7 +313,7 @@ fitness <- confront_populations(pop_A = pop_A,
 print(fitness)
 ```
 
-Taking the mean of the columns of the matrix `fitness` gives us the level of fitness player A's strategies; the same operation conducted on the rows of the matrix `- fitness` (the opposite of `fitness`) gives us the level of fitness of player B's strategies.
+Taking the mean of the columns of the matrix `fitness` gives us the level of fitness of player A's strategies; the same operation conducted on the rows of the matrix `- fitness` (the opposite of `fitness`) gives us the level of fitness of player B's strategies.
 ```{r fitness II}
 # Fitness of player A's strategies
 sort(colMeans(fitness), decreasing = TRUE)
@@ -319,7 +321,7 @@ sort(colMeans(fitness), decreasing = TRUE)
 # Fitness of player B's strategies
 sort(rowMeans(-fitness), decreasing = TRUE)
 ```
-Let us have a closer look at these results and focus on player A' strategies (easier to analyze than player B's). `s5` and `s8` are the best performing strategy. They are conservative strategies with small bets for small cards and large bets for large cards. With `s5`, player A wins on average `r colMeans(fitness)["s5"]` per hand against player B's strategies; with `s8`, player A wins on average `r colMeans(fitness)["s8"]` per hand. On the opposite spectrum, `s9` and `s10` have the lowest level of fitness. Both strategies prescribe to effectuates large bets for small cards and small bets for large cards. `s10` even prescribes to bet `2` (very small bet) for a `4` (highest card)! Although the large bets for small cards could be bluffs and are thus not bad per se, betting only `2` for the highest card is definitely a bad idea in this one-round version of poker. Player A loses on average `r -colMeans(fitness)["s9"]` with `s9` and `r -colMeans(fitness)["s10"]` with `s10`.
+Let us have a closer look at these results and focus on player A' strategies (easier to analyze than player B's). `s5` and `s8` are the best performing strategy. They are conservative strategies with small bets for small cards and large bets for large cards. With `s5`, player A wins on average `r colMeans(fitness)["s5"]` per hand played against player B's strategies; with `s8`, player A wins on average `r colMeans(fitness)["s8"]` per hand. On the opposite side of the spectrum, `s9` and `s10` have the lowest level of fitness. Both strategies prescribe to effectuates large bets for small cards and small bets for large cards. `s10` even prescribes to bet `2` (very small bet) for a `4` (highest card)! Although the large bets for small cards could be bluffs and are thus not bad per se, betting only `2` for the highest card is definitely a bad idea in this one-round version of poker. Player A loses on average `r -colMeans(fitness)["s9"]` per hand with `s9` and `r -colMeans(fitness)["s10"]` with `s10`.
 
 ## Generating New Strategies
 The generation of new populations of strategies follows **three steps**:
@@ -328,7 +330,7 @@ The generation of new populations of strategies follows **three steps**:
 2. **Children Generation: Crossover**
 3. **Children Generation: Mutation**
 
-For convenience, we use the term *parent strategy* to refer to a strategy from which new strategies are generated and *child strategy* to ref to a newly generated strategy. In the following, we illustrate how to generate five child strategies for player A. The approach is fundamentally the same for player B .
+We use the term *parent strategy* to refer to a strategy from which new strategies are generated and *child strategy* to refer to a newly generated strategy. In the following, we illustrate how to generate five child strategies for player A. The approach is fundamentally the same for player B .
 
 ### Parent Selection
 We select the `n` fittest strategies of `pop_A` to form the set of parent strategies `parents`. In our example, we select the seven fittest strategies.
@@ -350,7 +352,7 @@ print(parents)
 ```
 
 ### Children Generation
-To generate child strategies, we uniformly cross over the parent strategies and introduce random mutations. In the crossover step, we probabilistically combine parent strategies, element by element, to generate the child strategies. In other words, the first element of a child strategy corresponds to the first element of a parent strategy, the second element to the second element of a parent strategy, etc. We use the level of fitness to probabilistically determine which parent passes on a given element to a given child strategy, with fitter parent strategies being more likely to be selected. In the mutation step, we alter a small proportion of the elements of the child strategies.
+To generate child strategies, we uniformly cross over the parent strategies and introduce random mutations. In the crossover step, we probabilistically combine parent strategies, element by element, to generate the child strategies. In other words, the first element of a child strategy corresponds to the first element of a parent strategy, the second element to the second element of a parent strategy, etc. We use the level of fitness of the parent strategies to probabilistically determine from which parent each element of the children strategies is inherited, with fitter parent strategies being more likely to be selected. In the mutation step, we alter a small proportion of the elements of the child strategies.
 
 #### Children Generation: Crossover
 The matrix `pop_child` represents the population of child strategies. At this stage, its entries indicate the parent strategy from which the corresponding element is inherited.
@@ -369,7 +371,7 @@ print(pop_child)
 ```
 The first and the third elements of `Child 1` come from parent strategy `s8`, the second element of `Child 1` from `s2`, etc.
 
-Next, we loop through the names of the parent strategies. In the loop, we first assign the parent strategy with the appropriate name to `strategy_parent`. We then assign the location of the elements of `pop_child` that are inherited from `strategy_parent` to `location_parent`. Finally, we substitute the elements inherited from `strategy_parent` with the corresponding elements of `strategy_parent`.
+Next, we loop through the names of the parent strategies. In the loop, we first assign the parent strategy under investigation to `strategy_parent`. We then assign the location of the elements of `pop_child` that are inherited from this parent strategy to `location_parent` before substituting them with the corresponding elements of the parent strategy.
 ```{r crossover II}
 for(name_parent in name_parents){
   
@@ -392,7 +394,7 @@ print(pop_child)
 ```
 
 #### Children Generation: Mutations
-Finally, we introduce random mutations to `pop_child`. We first assign the desired mutation rate to `mutation_rate` and use the function `sample()` with `prob = c(mutation_rate, 1 - mutation_rate)` to create the matrix `mutation_location` which indicates the locations of the mutations. We then use the function `sample()` again to generate the vector `mutation_outcome` which indicates the outcome of the mutations. Finally, we substitute the elements of `pop_child` where a mutation occurs with the values of `mutation_outcome`.
+Finally, we introduce random mutations to the population of children strategies. We first assign the desired mutation rate to `mutation_rate` and use the function `sample()` with `prob = c(mutation_rate, 1 - mutation_rate)` to create the matrix `mutation_location` which indicates the location of the mutations. We then use the function `sample()` again to generate the vector `mutation_outcome` which indicates the outcome of the mutations. Finally, we substitute the elements of `pop_child` where a mutation occurs with the values of `mutation_outcome`.
 
 ```{r mutation}
 mutation_rate <- 0.2
@@ -420,7 +422,7 @@ print(pop_child)
 ```
 
 ### `generate_A()` and `generate_B()`
-The functions `generate_A()` and `generate_B()` encapsulate these three steps (parent selection, crossover, mutation) for player A and player B. These functions are the last one we need to be able to run the GA.
+The functions `generate_A()` and `generate_B()` encapsulate these three steps (parent selection, crossover, mutation) for player A and player B. These functions are the last ones that we need to be able to run the GA.
 
 ```{r function generate_A}
 generate_A <- function(fitness, pop, n_parents, dim_pop_A, dimname_pop_A,
@@ -532,7 +534,7 @@ generate_B <- function(fitness, pop, n_parents, dim_pop_B, dimname_pop_B,
 }
 ```
 
-Let us look at the function `generate_A` in action.
+Let us look at the function `generate_A()` in action.
 ```{r generate_A example}
 # Parent Strategies
 print(pop_A) # random bets for small cards
@@ -545,7 +547,7 @@ generate_A(pop = pop_A,
 ```
 
 # The Genetic Algorithm in Action
-Now that we have covered all the components of the GA, we can finally write the function `my_GA` which encapsulates them.
+Now that we have covered all the components of the GA, we can finally write the function `my_GA()` which encapsulates them.
 
 ```{r function my_GA}
 my_GA <- function(
