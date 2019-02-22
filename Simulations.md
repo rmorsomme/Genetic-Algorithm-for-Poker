@@ -9,13 +9,13 @@ library(gdata)
 library(rlang)
 ```
 
-I simulate `125` generations with the GA across three levels of ante (`ante`) 0, 5, 10 and four levels of mutation rate (`mut_rates`) 0.001, 0.01, 0.05, 0.1 and save the results for the [Shiny App](https://rmorsomme.shinyapps.io/shiny_app_-_poker/).
+I simulate `150` generations with the GA across three levels of ante (`ante`) 0, 5, 10 and four levels of mutation rate (`mut_rates`) 0.001, 0.01, 0.05, 0.1 and save the results for the [Shiny App](https://rmorsomme.shinyapps.io/shiny_app_-_poker/).
 
 ``` r
 #
 # Setup
 load("functions.RDATA")
-n_generation <- 125
+n_generation <- 150
 set.seed(123)
 
 
