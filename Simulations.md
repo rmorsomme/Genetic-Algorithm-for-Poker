@@ -1,7 +1,7 @@
 Results
 ================
 Raphaël Morsomme
-2019-02-22
+2019-02-25
 
 ``` r
 library(tidyverse)
@@ -15,7 +15,7 @@ I simulate `150` generations with the GA across three levels of ante (`ante`) 0,
 #
 # Setup
 load("functions.RDATA")
-n_generation <- 150
+n_generation <- 125
 set.seed(123)
 
 
@@ -31,13 +31,22 @@ for(ante in antes){
   
   for(mut_rate in mut_rates){
     
-    simul_name <- paste("results_ante_", ante, "mut_", mut_rate, sep = "")
-    simul_results <- my_GA(n_generation = n_generation,
-                           ante = ante,
-                           mutation_rate = mut_rate)
+    simul_name <- paste(
+      "results_ante_", ante, 
+      "mut_", mut_rate, 
+      sep = ""
+      )
     
-    assign(simul_name,
-           simul_results)
+    simul_results <- my_GA(
+      n_generation  = n_generation,
+      ante          = ante,
+      mutation_rate = mut_rate
+      )
+    
+    assign(
+      x     = simul_name,
+      value = simul_results
+      )
     
     simul_names <- c(simul_names, simul_name)
     

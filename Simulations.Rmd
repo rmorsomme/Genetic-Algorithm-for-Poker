@@ -24,7 +24,7 @@ I simulate `150` generations with the GA across three levels of ante (`ante`) `r
 #
 # Setup
 load("functions.RDATA")
-n_generation <- 150
+n_generation <- 125
 set.seed(123)
 
 
@@ -40,34 +40,38 @@ for(ante in antes){
   
   for(mut_rate in mut_rates){
     
-    simul_name <- paste(
-      "results_ante_", ante, 
-      "mut_", mut_rate, 
-      sep = ""
-      )
-    
+    # Run GA
     simul_results <- my_GA(
       n_generation  = n_generation,
       ante          = ante,
       mutation_rate = mut_rate
       )
     
+    # Name of file
+    simul_name <- paste(
+      "results_ante_", ante, 
+      "mut_", mut_rate, 
+      sep = ""
+      )
+    
+    # Assign results to file with approriate name
     assign(
       x     = simul_name,
       value = simul_results
       )
     
+    # Keep track of file names
     simul_names <- c(simul_names, simul_name)
     
   }
   
   
   #
-  # Saving results
+  # Save results
   save(
     list = simul_names,
     file = paste("Shiny App - Poker/results", ante, ".RDATA", sep = "")
-       )
+    )
   
 }
 ```

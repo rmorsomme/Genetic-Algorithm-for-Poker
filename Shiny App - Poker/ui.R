@@ -38,8 +38,8 @@ fluidPage(
       sliderInput(inputId = "generation",
                   label = "Generation",
                   min = 1, 
-                  max = 150,
-                  value = 5,
+                  max = 125,
+                  value = 1,
                   step = 1,
                   animate = animationOptions(interval = 250, loop = TRUE)),
       
